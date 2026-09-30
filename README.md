@@ -17,7 +17,7 @@ During copy, move, resume, retry, and undo, WaveSort shows percentage complete, 
 
 WaveSort classifies using folder and filename cues. This keeps category decisions explainable and works well with sample-pack conventions such as `808`, `kicks`, `snares`, `hats`, `open hats`, `percs`, `vox`, `loops`, `melodies`, `FX`, `risers`, and `one-shots`. Compact aliases such as `HHat`, `hhats`, `ohats`, and numbered names like `openhat5` are recognized; a rescan refreshes older cached guesses. Classification keeps a sound family separate from its form, so a kick one-shot can sort to `One-Shots/Kicks` and a melody loop to `Loops/Melodies`. The optional sound-name tool is separate from classification: it never changes category or destination folders.
 
-For repetitive packs, **Select similar files** groups names in the same folder after take numbers and producer tags are removed; review the selection before applying the existing bulk category correction. **Library rules** adds root-scoped, literal filename aliases with an impact preview before saving. Saved manual corrections take precedence over rules. **Accuracy** offers a reproducible small queue across predicted categories. Listen to each sound and set its independent verified type in the file details or queue; the panel then reports wrong auto-sorts, correct auto-sorts, and review decisions on verified files only. Labels are tied to the scanned file fingerprint and do not change sorting. See [CLASSIFIER_BENCHMARK.md](C:/Users/chris/OneDrive/Documents/VsCode/WaveSort/CLASSIFIER_BENCHMARK.md) for evaluation limits.
+For repetitive packs, **Select similar files** groups names in the same folder after take numbers and producer tags are removed; review the selection before applying the existing bulk category correction. **Library rules** adds root-scoped, literal filename aliases with an impact preview before saving. Saved manual corrections take precedence over rules. **Accuracy** offers a reproducible small queue across predicted categories. Listen to each sound and set its independent verified type in the file details or queue; the panel then reports wrong auto-sorts, correct auto-sorts, and review decisions on verified files only. Labels are tied to the scanned file fingerprint and do not change sorting. See [CLASSIFIER_BENCHMARK.md](CLASSIFIER_BENCHMARK.md) for evaluation limits.
 
 Sound-name V1 is a local, offline heuristic for isolated 0.04–3-second uncompressed PCM (16/24-bit) or float (32-bit) WAV files up to 6 MB. It measures attack, decay, brightness/noisiness, and duration to propose words such as `Tss`, `Tchik`, or `Thump`; the sound-type prefix comes from the reviewed category, not audio recognition. It cannot reliably recognize a sound or prove its source. Loops, stems, textures, unsupported codecs, long/large files, silence, corrupt data, and ambiguous envelopes return no reliable suggestion. Analysis occurs only when requested, and accepting a name affects only the planned destination copy/move. The original extension is kept; the final collision-safe filename appears in the dry-run plan. Rescanning clears unexecuted name choices.
 
@@ -38,15 +38,18 @@ Supported audio files: WAV, MP3, FLAC, AIFF/AIF, M4A, OGG, OPUS, AAC, and WMA. S
 - The report action opens the durable JSON journal for the last operation.
 - The interface uses a near-black base with a locally saved accent color in Settings.
 
-The classifier remains explainable filename/folder heuristics rather than waveform understanding. Cue strength is not a calibrated probability, and browser-level playback coverage varies by codec. See the remaining limitations and verification gates in [AUDIT_NEXT_STEPS.md](C:/Users/chris/OneDrive/Documents/VsCode/WaveSort/AUDIT_NEXT_STEPS.md).
+The classifier remains explainable filename/folder heuristics rather than waveform understanding. Cue strength is not a calibrated probability, and browser-level playback coverage varies by codec. See the remaining limitations and verification gates in [AUDIT_NEXT_STEPS.md](AUDIT_NEXT_STEPS.md).
 
 ## Development
 
+Use Windows x64, Node.js 22.12+ and pnpm 11.19.0 on PATH. The app uses Electron, React, TypeScript and Vite. Dependencies install from the committed lockfile; local package caches and release outputs are not required in Git.
+
 ```text
-pnpm install
+pnpm install --frozen-lockfile
 pnpm test
 pnpm typecheck
 pnpm build
+pnpm start
 pnpm check
 pnpm dev
 ```
