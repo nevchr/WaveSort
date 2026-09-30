@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1920, height=1080">
+  <title>WaveSort — sort your sounds</title>
+  <script src="assets/js/gsap.min.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { width: 1920px; height: 1080px; margin: 0; overflow: hidden; background: #080a0b; color: #ecf0ef; font-family: system-ui, sans-serif; }
+    #root { position: relative; width: 100%; height: 100%; overflow: hidden; background: #080a0b; }
+    .clip { position: absolute; inset: 0; overflow: hidden; }
+    .field { position: absolute; inset: 0; background: radial-gradient(circle at 78% 35%, rgba(217,173,107,.075), transparent 45%); }
+    .grain { position: absolute; inset: 0; opacity: .16; background-image: repeating-linear-gradient(0deg, transparent 0 3px, rgba(255,255,255,.014) 4px 5px); pointer-events: none; }
+    .accent-rule { width: 68px; height: 5px; background: #d9ad6b; border-radius: 2px; }
+    .eyebrow { color: #d9ad6b; font-size: 24px; font-weight: 750; text-transform: uppercase; letter-spacing: .16em; }
+    .large-title { margin: 20px 0 0; font-size: 104px; line-height: 1.04; letter-spacing: -.065em; font-weight: 760; }
+    .lede { margin: 28px 0 0; color: #bac5c3; font-size: 33px; line-height: 1.35; }
+    .mark { color: #d9ad6b; font-weight: 800; }
+    .brand { font-size: 39px; font-weight: 760; letter-spacing: -.055em; }
+    .brand .dot { color: #d9ad6b; }
+    .scene-top { position: absolute; left: 98px; top: 73px; }
+    .scene-bottom { position: absolute; left: 98px; bottom: 75px; color: #aebbb8; font-size: 24px; }
+    .scene-index { position: absolute; right: 98px; bottom: 75px; color: #9daaa7; font-size: 22px; letter-spacing: .08em; }
+    #s1 .main-copy { position: absolute; left: 98px; top: 318px; width: 790px; }
+    #s1 .main-copy .large-title { max-width: 780px; }
+    .loose-files { position: absolute; left: 1060px; top: 260px; width: 665px; }
+    .loose-file { display: flex; align-items: center; gap: 24px; height: 105px; margin-bottom: 22px; padding: 0 30px; border: 2px solid #414744; border-radius: 13px; background: #15191a; color: #e7eceb; font-size: 31px; box-shadow: 0 30px 65px rgba(0,0,0,.26); }
+    .loose-file:nth-child(2) { margin-left: 65px; }
+    .loose-file:nth-child(3) { margin-left: 25px; }
+    .loose-file .ext { display: grid; place-items: center; width: 51px; height: 51px; border: 2px solid #616d69; border-radius: 6px; color: #bec8c4; font-size: 19px; font-weight: 750; }
+    .product { position: absolute; left: 104px; top: 169px; width: 1712px; height: 762px; border: 2px solid #414744; border-radius: 16px; background: #101315; box-shadow: 0 36px 110px rgba(0,0,0,.55); overflow: hidden; }
+    .app-topbar { display: flex; align-items: center; justify-content: space-between; height: 95px; padding: 0 43px; border-bottom: 2px solid #303738; background: #0c0f10; }
+    .local { display: flex; align-items: center; gap: 13px; color: #b9c5c1; font-size: 23px; }
+    .local i { width: 12px; height: 12px; border-radius: 50%; background: #96d3ad; }
+    .empty-inner { position: absolute; left: 355px; top: 200px; width: 1000px; height: 390px; padding: 68px 72px; border: 2px solid #3b4343; border-radius: 13px; background: #15191a; }
+    .empty-inner .tiny-step { color: #b7c2bf; font-size: 21px; font-weight: 700; letter-spacing: .12em; }
+    .empty-inner h2 { margin: 18px 0; font-size: 67px; line-height: 1.1; letter-spacing: -.055em; }
+    .empty-inner p { margin: 0; max-width: 760px; color: #b8c3bf; font-size: 28px; line-height: 1.4; }
+    .button { display: inline-flex; align-items: center; justify-content: center; height: 73px; padding: 0 29px; border-radius: 8px; background: #d9ad6b; color: #131513; font-size: 28px; font-weight: 750; }
+    .empty-inner .button { margin-top: 31px; }
+    .cursor { position: absolute; z-index: 8; width: 32px; height: 38px; background: #ecf0ef; clip-path: polygon(0 0, 0 100%, 9px 75%, 17px 94%, 24px 91%, 16px 69%, 32px 67%); filter: drop-shadow(2px 2px 2px #000); }
+    #choose-cursor { left: 650px; top: 590px; }
+    .ui-heading { position: absolute; left: 56px; top: 135px; }
+    .ui-heading .step { color: #d9ad6b; font-size: 21px; font-weight: 760; letter-spacing: .12em; }
+    .ui-heading h2 { margin: 9px 0 6px; font-size: 46px; letter-spacing: -.045em; }
+    .ui-heading p { margin: 0; color: #b6c1bd; font-size: 25px; }
+    .path-box { position: absolute; top: 284px; height: 78px; padding: 20px 25px; border: 2px solid #394241; border-radius: 7px; background: #171b1d; color: #dce5e0; font-size: 25px; }
+    .path-box b { color: #aab8b3; font-size: 19px; margin-right: 21px; letter-spacing: .08em; }
+    .path-box.source { left: 56px; width: 753px; }
+    .path-box.output { left: 827px; width: 820px; }
+    .table { position: absolute; left: 56px; top: 391px; width: 1070px; height: 282px; border: 2px solid #394241; border-radius: 8px; overflow: hidden; }
+    .table-head, .row { display: grid; grid-template-columns: 1.65fr .95fr .5fr; align-items: center; column-gap: 20px; padding: 0 29px; }
+    .table-head { height: 56px; border-bottom: 2px solid #303738; color: #b2bfba; font-size: 20px; font-weight: 750; letter-spacing: .08em; }
+    .row { height: 55px; border-bottom: 1px solid #303738; color: #dfe7e2; font-size: 25px; }
+    .row .cat { position: relative; display: block; height: 32px; color: #e0bb83; }
+    .row .review { color: #e9aaa0; }
+    .row.focus { background: #202321; box-shadow: inset 5px 0 #d9ad6b; }
+    .row .size { color: #aebbb6; text-align: right; }
+    .details { position: absolute; left: 1150px; top: 391px; width: 497px; height: 282px; padding: 27px 29px; border: 2px solid #394241; border-radius: 8px; background: #0c0f10; }
+    .details .label { color: #adbbb5; font-size: 19px; font-weight: 750; letter-spacing: .1em; }
+    .details h3 { margin: 15px 0 12px; font-size: 32px; }
+    .details .reason { color: #b8c3bf; font-size: 21px; line-height: 1.36; }
+    .category-select { display: flex; align-items: center; justify-content: space-between; height: 57px; margin-top: 24px; padding: 0 16px; border: 2px solid #5e6964; border-radius: 7px; color: #ebefec; font-size: 24px; }
+    .category-select > span:first-child { position: relative; display: block; flex: 1; height: 32px; }
+    .dock { position: absolute; left: 0; right: 0; bottom: 0; height: 74px; display: flex; align-items: center; justify-content: space-between; padding: 0 55px; border-top: 2px solid #394241; background: #0d1011; font-size: 25px; }
+    .dock .button { height: 54px; font-size: 23px; }
+    #s3 .product { top: 122px; height: 816px; }
+    #s3 .app-topbar { height: 88px; }
+    #s3 .ui-heading { top: 113px; }
+    #s3 .path-box { top: 251px; }
+    #s3 .table, #s3 .details { top: 353px; }
+    #review-cursor { left: 1470px; top: 664px; }
+    .category-original, .category-corrected, .select-original, .select-corrected { position: absolute; left: 0; top: 0; }
+    .category-corrected, .select-corrected { opacity: 0; }
+    #review-caption { position: absolute; left: 150px; top: 62px; color: #ecf0ef; font-size: 47px; font-weight: 740; letter-spacing: -.035em; }
+    .stage-label { position: absolute; left: 155px; top: 58px; color: #d9ad6b; font-size: 26px; font-weight: 750; letter-spacing: .1em; }
+    #s4 .product { top: 150px; height: 775px; }
+    .modal { position: absolute; z-index: 3; left: 333px; top: 105px; width: 1046px; height: 590px; padding: 39px 48px; border: 2px solid #5d6660; border-radius: 13px; background: #15191a; box-shadow: 0 25px 70px rgba(0,0,0,.55); }
+    .modal-kicker { color: #d9ad6b; font-size: 20px; font-weight: 760; letter-spacing: .13em; }
+    .modal h2 { margin: 13px 0 11px; font-size: 51px; }
+    .modal .sub { color: #b8c3bf; font-size: 23px; }
+    .metric-line { display: flex; gap: 58px; margin: 25px 0 24px; padding: 21px 0; border-top: 2px solid #37403e; border-bottom: 2px solid #37403e; color: #e9eeea; font-size: 27px; }
+    .metric-line b { color: #d9ad6b; }
+    .plan-dest { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 24px; color: #e2e9e4; font-size: 26px; }
+    .plan-dest div { padding: 15px 18px; border: 2px solid #394241; border-radius: 7px; background: #101415; }
+    .modal-bottom { display: flex; justify-content: flex-end; margin-top: 33px; }
+    .progress-box { position: absolute; z-index: 4; left: 207px; top: 255px; width: 1298px; height: 267px; padding: 42px 52px; border: 2px solid #8c7552; border-radius: 13px; background: #15191a; box-shadow: 0 30px 80px rgba(0,0,0,.6); opacity: 0; }
+    .progress-box h2 { margin: 0 0 30px; font-size: 46px; }
+    .progress-track { width: 100%; height: 18px; border-radius: 10px; background: #343b39; overflow: hidden; }
+    .progress-fill { width: 100%; height: 100%; background: #d9ad6b; transform-origin: left center; transform: scaleX(0); }
+    .progress-copy { position: relative; margin-top: 21px; color: #c4cec9; font-size: 23px; }
+    .progress-copy span { position: absolute; left: 0; top: 0; }
+    #progress-done { opacity: 0; }
+    #copy-cursor { left: 1050px; top: 660px; }
+    #s5 .outro { position: absolute; left: 104px; top: 310px; width: 1050px; }
+    #s5 .outro .brand { font-size: 110px; }
+    #s5 .outro h2 { margin: 43px 0 0; font-size: 72px; line-height: 1.13; letter-spacing: -.055em; }
+    #s5 .outro p { margin: 32px 0 0; color: #b9c5c0; font-size: 30px; }
+    .folder-tree { position: absolute; left: 1288px; top: 285px; width: 450px; padding: 35px 39px; border: 2px solid #4e5752; border-radius: 12px; background: #15191a; box-shadow: 0 28px 72px rgba(0,0,0,.45); }
+    .folder-tree b { display: block; margin-bottom: 23px; color: #d9ad6b; font-size: 27px; }
+    .folder-tree div { padding: 11px 0 11px 20px; border-left: 2px solid #6b5a43; color: #e4ebe6; font-size: 27px; }
+  </style>
+</head>
+<body>
+  <div data-hf-id="hf-wc86" id="root" data-composition-id="wavesort-brag" data-start="0" data-duration="21" data-width="1920" data-height="1080" data-fps="30">
+    <section data-hf-id="hf-03zl" id="s1" class="clip" data-start="0" data-duration="2.5" data-track-index="0">
+      <div data-hf-id="hf-0ztw" class="field"></div><div data-hf-id="hf-ryn8" class="grain" data-layout-ignore=""></div>
+      <div data-hf-id="hf-efbu" class="scene-top"><div data-hf-id="hf-w7xq" class="brand">WaveSort<span data-hf-id="hf-6jgg" class="dot">.</span></div></div>
+      <div data-hf-id="hf-p1lz" class="main-copy"><div data-hf-id="hf-d3ah" id="hook-rule" class="accent-rule"></div><h1 data-hf-id="hf-jvvb" id="hook" class="large-title">Your samples.<br data-hf-id="hf-x5px">Everywhere.</h1><p data-hf-id="hf-veq5" class="lede">One folder can hold a lot of noise.</p></div>
+      <div data-hf-id="hf-jjvs" class="loose-files"><div data-hf-id="hf-jqyw" id="loose-1" class="loose-file"><span data-hf-id="hf-smyw" class="ext">WAV</span>808_punch.wav</div><div data-hf-id="hf-79ai" id="loose-2" class="loose-file"><span data-hf-id="hf-o3b4" class="ext">WAV</span>snare_room_02.wav</div><div data-hf-id="hf-8twc" id="loose-3" class="loose-file"><span data-hf-id="hf-mzew" class="ext">MP3</span>take_07.mp3</div></div>
+      <div data-hf-id="hf-50ba" class="scene-bottom">A sample library, before the sort.</div><div data-hf-id="hf-hzw4" class="scene-index">01 / 05</div>
+    </section>
+
+    <section data-hf-id="hf-dd2n" id="s2" class="clip" data-start="2.5" data-duration="4.5" data-track-index="0">
+      <div data-hf-id="hf-bxgc" class="field"></div><div data-hf-id="hf-3obg" class="grain" data-layout-ignore=""></div>
+      <div data-hf-id="hf-yo3e" class="stage-label">01 / CHOOSE</div>
+      <div data-hf-id="hf-ong0" id="empty-product" class="product">
+        <div data-hf-id="hf-txom" class="app-topbar"><div data-hf-id="hf-p4j6" class="brand">WaveSort<span data-hf-id="hf-3zzs" class="dot">.</span></div><div data-hf-id="hf-yczq" class="local"><i data-hf-id="hf-wt6k"></i>Local only</div></div>
+        <div data-hf-id="hf-0mzo" class="empty-inner"><div data-hf-id="hf-fpn4" class="tiny-step">01 / SOURCE</div><h2 data-hf-id="hf-um9o">Sort your sounds.</h2><p data-hf-id="hf-m6p1">Choose a sample folder. Review the results before copying or moving anything.</p><div data-hf-id="hf-p036" id="choose-button" class="button">Choose a folder&#160; →</div></div>
+        <div data-hf-id="hf-jzp9" id="choose-cursor" class="cursor" data-layout-ignore=""></div>
+      </div>
+      <div data-hf-id="hf-xe5d" class="scene-bottom">Choose a source folder.</div><div data-hf-id="hf-e7lb" class="scene-index">02 / 05</div>
+    </section>
+
+    <section data-hf-id="hf-c0hc" id="s3" class="clip" data-start="7" data-duration="7" data-track-index="0">
+      <div data-hf-id="hf-aqj9" class="field"></div><div data-hf-id="hf-2hed" class="grain" data-layout-ignore=""></div>
+      <div data-hf-id="hf-849i" id="review-caption">See the guess. Keep the choice.</div>
+      <div data-hf-id="hf-8p8t" class="product">
+        <div data-hf-id="hf-fydm" class="app-topbar"><div data-hf-id="hf-piu7" class="brand">WaveSort<span data-hf-id="hf-2t2p" class="dot">.</span></div><div data-hf-id="hf-m3wq" class="local"><i data-hf-id="hf-zeb8"></i>Local only</div></div>
+        <div data-hf-id="hf-isr3" class="ui-heading"><div data-hf-id="hf-ndrj" class="step">02 / REVIEW</div><h2 data-hf-id="hf-xwfs">Your sounds</h2><p data-hf-id="hf-30v7">4 files · 1 to review</p></div>
+        <div data-hf-id="hf-ym4z" class="path-box source"><b data-hf-id="hf-l0e0">SOURCE</b>Sample Pack</div><div data-hf-id="hf-5lnu" class="path-box output"><b data-hf-id="hf-24o4">OUTPUT</b>Sorted Output</div>
+        <div data-hf-id="hf-alxw" class="table"><div data-hf-id="hf-npab" class="table-head"><span data-hf-id="hf-rday">NAME</span><span data-hf-id="hf-m071">CATEGORY</span><span data-hf-id="hf-16pc">SIZE</span></div>
+          <div data-hf-id="hf-eugs" id="row-1" class="row"><span data-hf-id="hf-3oww">808_punch.wav</span><span data-hf-id="hf-8192" class="cat">Kicks</span><span data-hf-id="hf-k829" class="size">2.4 MB</span></div>
+          <div data-hf-id="hf-nicn" id="row-2" class="row"><span data-hf-id="hf-51bv">snare_room_02.wav</span><span data-hf-id="hf-nf6t" class="cat">Snares</span><span data-hf-id="hf-uqr2" class="size">1.8 MB</span></div>
+          <div data-hf-id="hf-jk8m" id="row-3" class="row"><span data-hf-id="hf-yyk3">closed_hat_09.wav</span><span data-hf-id="hf-moe5" class="cat">Hats</span><span data-hf-id="hf-8p33" class="size">0.8 MB</span></div>
+          <div data-hf-id="hf-teh5" id="row-4" class="row focus"><span data-hf-id="hf-zcp2">take_07.wav</span><span data-hf-id="hf-2bhv" class="cat"><span data-hf-id="hf-xelt" id="cat-old" class="category-original review">Review</span><span data-hf-id="hf-qfwn" id="cat-new" class="category-corrected">Vox</span></span><span data-hf-id="hf-trqk" class="size">1.2 MB</span></div>
+        </div>
+        <div data-hf-id="hf-osyq" class="details"><div data-hf-id="hf-mmmy" class="label">FILE DETAILS</div><h3 data-hf-id="hf-qcp1">take_07.wav</h3><div data-hf-id="hf-zg93" class="reason">No clear filename or folder cue. Review this one.</div><div data-hf-id="hf-2jit" class="category-select"><span data-hf-id="hf-uckh"><span data-hf-id="hf-rtu5" id="select-old" class="select-original">Other</span><span data-hf-id="hf-319t" id="select-new" class="select-corrected">Vox</span></span><span data-hf-id="hf-i3pb">⌄</span></div></div>
+        <div data-hf-id="hf-pz3p" class="dock"><span data-hf-id="hf-scxp">4 selected · Copy keeps your originals in place</span><div data-hf-id="hf-vcx4" class="button">Copy files&#160; →</div></div>
+        <div data-hf-id="hf-aya4" id="review-cursor" class="cursor" data-layout-ignore=""></div>
+      </div>
+      <div data-hf-id="hf-reoy" class="scene-index">03 / 05</div>
+    </section>
+
+    <section data-hf-id="hf-ym7t" id="s4" class="clip" data-start="14" data-duration="4.5" data-track-index="0">
+      <div data-hf-id="hf-b4ua" class="field"></div><div data-hf-id="hf-2vpe" class="grain" data-layout-ignore=""></div><div data-hf-id="hf-zeqh" class="stage-label">03 / SORT</div>
+      <div data-hf-id="hf-bnk1" class="product"><div data-hf-id="hf-gcon" class="app-topbar"><div data-hf-id="hf-px58" class="brand">WaveSort<span data-hf-id="hf-37dq" class="dot">.</span></div><div data-hf-id="hf-mi7r" class="local"><i data-hf-id="hf-y7e5"></i>Local only</div></div>
+        <div data-hf-id="hf-7jby" id="copy-modal" class="modal"><div data-hf-id="hf-8cd4" class="modal-kicker">REVIEW BEFORE FILESYSTEM CHANGES</div><h2 data-hf-id="hf-3zw1">Copy plan</h2><div data-hf-id="hf-x9ms" class="sub">Sorted Output</div><div data-hf-id="hf-u9zn" class="metric-line"><span data-hf-id="hf-fmh4"><b data-hf-id="hf-ubk3">4</b> ready</span><span data-hf-id="hf-owrb"><b data-hf-id="hf-sqbz">0</b> blocked</span></div><div data-hf-id="hf-9jo6" class="plan-dest"><div data-hf-id="hf-a516">One-Shots / Kicks</div><div data-hf-id="hf-spq9">One-Shots / Snares</div><div data-hf-id="hf-smw1">One-Shots / Hats</div><div data-hf-id="hf-07u4">One-Shots / Vox</div></div><div data-hf-id="hf-cjod" class="modal-bottom"><div data-hf-id="hf-nosa" id="copy-button" class="button">Copy verified plan&#160; →</div></div></div>
+        <div data-hf-id="hf-q0vg" id="copy-progress" class="progress-box"><h2 data-hf-id="hf-q9gz">Copying your sounds <span data-hf-id="hf-vf3e" id="percent" style="opacity:0">100%</span></h2><div data-hf-id="hf-lxwj" class="progress-track"><div data-hf-id="hf-cq24" id="progress-fill" class="progress-fill"></div></div><div data-hf-id="hf-egql" class="progress-copy"><span data-hf-id="hf-3dy9" id="progress-active">Working through the approved plan…</span><span data-hf-id="hf-g49w" id="progress-done">4 of 4 files copied · Originals untouched</span></div></div>
+        <div data-hf-id="hf-rmlt" id="copy-cursor" class="cursor" data-layout-ignore=""></div>
+      </div>
+      <div data-hf-id="hf-j551" class="scene-index">04 / 05</div>
+    </section>
+
+    <section data-hf-id="hf-2saz" id="s5" class="clip" data-start="18.5" data-duration="2.5" data-track-index="0">
+      <div data-hf-id="hf-d4df" class="field"></div><div data-hf-id="hf-4v8j" class="grain" data-layout-ignore=""></div>
+      <div data-hf-id="hf-e0lx" class="outro"><div data-hf-id="hf-2jmz" id="outro-rule" class="accent-rule"></div><div data-hf-id="hf-7ykf" id="outro-brand" class="brand">WaveSort<span data-hf-id="hf-20gn" class="dot">.</span></div><h2 data-hf-id="hf-17hk" id="outro-line">Sorted. Originals untouched.</h2><p data-hf-id="hf-nvbu" id="outro-local">Local only. Your library stays yours.</p></div>
+      <div data-hf-id="hf-8w6g" id="folder-tree" class="folder-tree"><b data-hf-id="hf-9vlh">Sorted Output</b><div data-hf-id="hf-56la">One-Shots / Kicks</div><div data-hf-id="hf-fkgl">One-Shots / Snares</div><div data-hf-id="hf-voqd">One-Shots / Hats</div><div data-hf-id="hf-0qbo">One-Shots / Vox</div></div>
+      <div data-hf-id="hf-rig0" class="scene-index">05 / 05</div>
+    </section>
+
+    <audio data-hf-id="hf-27g0" id="music" src="assets/music/happy-beats-business-moves-vol-10-by-ende-dot-app.mp3" data-start="0" data-duration="21" data-track-index="10" data-volume="0.20" data-automation="{&quot;version&quot;:1,&quot;lanes&quot;:[{&quot;target&quot;:&quot;volume&quot;,&quot;points&quot;:[{&quot;t&quot;:0,&quot;v&quot;:0},{&quot;t&quot;:0.7,&quot;v&quot;:1},{&quot;t&quot;:18.5,&quot;v&quot;:1},{&quot;t&quot;:21,&quot;v&quot;:0}]}]}"></audio>
+    <audio data-hf-id="hf-pgh2" id="sfx-choose" src="assets/sfx/interface/click_003.ogg" data-start="5.19" data-duration="0.05" data-track-index="11" data-volume="0.38"></audio>
+    <audio data-hf-id="hf-azy1" id="sfx-review" src="assets/sfx/interface/click_003.ogg" data-start="11.47" data-duration="0.05" data-track-index="12" data-volume="0.35"></audio>
+    <audio data-hf-id="hf-aalb" id="sfx-copy" src="assets/sfx/impact/impactSoft_medium_001.ogg" data-start="15.82" data-duration="0.18" data-track-index="13" data-volume="0.42"></audio>
+    <audio data-hf-id="hf-r76l" id="sfx-outro" src="assets/sfx/interface/bong_001.ogg" data-start="18.55" data-duration="0.12" data-track-index="14" data-volume="0.32"></audio>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo('#hook-rule', { scaleX: 0 }, { scaleX: 1, transformOrigin: 'left', duration: .38, ease: 'power2.out' }, .1);
+    tl.fromTo('#hook', { y: 38, opacity: 0 }, { y: 0, opacity: 1, duration: .56, ease: 'power3.out' }, .18);
+    tl.fromTo('#s1 .lede', { y: 15, opacity: 0 }, { y: 0, opacity: 1, duration: .42 }, .7);
+    ['#loose-1','#loose-2','#loose-3'].forEach((id, i) => tl.fromTo(id, { x: 100, opacity: 0, rotation: i === 1 ? 3 : -2 }, { x: 0, opacity: 1, rotation: 0, duration: .42, ease: 'power2.out' }, .38 + i * .30));
+    tl.to('#s1 .field', { backgroundColor: '#11100f', duration: 2.3, ease: 'none' }, .1);
+
+    tl.fromTo('#empty-product', { y: 80, opacity: 0 }, { y: 0, opacity: 1, duration: .65, ease: 'power3.out' }, 2.58);
+    tl.fromTo('#s2 .stage-label', { x: -30, opacity: 0 }, { x: 0, opacity: 1, duration: .4 }, 2.64);
+    tl.fromTo('#choose-cursor', { x: 250, y: 120, opacity: 0 }, { x: 0, y: 0, opacity: 1, duration: .85, ease: 'power2.inOut' }, 4.18);
+    tl.to('#choose-button', { scale: .965, duration: .11, yoyo: true, repeat: 1 }, 5.19);
+    tl.to('#s2 .field', { backgroundColor: '#11100f', duration: 3.7, ease: 'none' }, 2.75);
+
+    tl.fromTo('#review-caption', { y: 22, opacity: 0 }, { y: 0, opacity: 1, duration: .42 }, 7.15);
+    tl.fromTo('#s3 .product', { y: 48, opacity: 0 }, { y: 0, opacity: 1, duration: .53, ease: 'power3.out' }, 7.2);
+    ['#row-1','#row-2','#row-3','#row-4'].forEach((id, i) => tl.fromTo(id, { x: -25, opacity: 0 }, { x: 0, opacity: 1, duration: .32, ease: 'power2.out' }, 8.25 + i * .6));
+    tl.fromTo('#review-cursor', { x: 95, y: 90, opacity: 0 }, { x: 0, y: 0, opacity: 1, duration: .5 }, 10.85);
+    tl.to('#s3 .category-select', { borderColor: '#d9ad6b', duration: .16 }, 11.47);
+    tl.to(['#cat-old','#select-old'], { opacity: 0, duration: .16 }, 11.53);
+    tl.to(['#cat-new','#select-new'], { opacity: 1, duration: .23 }, 11.66);
+    tl.to('#s3 .field', { backgroundColor: '#11100f', duration: 6.2, ease: 'none' }, 7.2);
+
+    tl.fromTo('#s4 .product', { y: 50, opacity: 0 }, { y: 0, opacity: 1, duration: .48, ease: 'power3.out' }, 14.1);
+    tl.fromTo('#copy-cursor', { x: 90, y: 65, opacity: 0 }, { x: 0, y: 0, opacity: 1, duration: .46 }, 15.18);
+    // beat-locked: explicit copy action at 15.82s
+    tl.to('#copy-button', { scale: .98, duration: .10, yoyo: true, repeat: 1 }, 15.82);
+    tl.to('#copy-modal', { opacity: 0, y: -25, duration: .30 }, 16.0);
+    tl.fromTo('#copy-progress', { opacity: 0, y: 25 }, { opacity: 1, y: 0, duration: .38 }, 16.2);
+    tl.to('#progress-fill', { scaleX: 1, duration: 1.12, ease: 'power1.inOut' }, 16.53);
+    tl.to('#progress-active', { opacity: 0, duration: .10 }, 17.62);
+    tl.to(['#percent','#progress-done'], { opacity: 1, duration: .19 }, 17.68);
+    tl.to('#s4 .field', { backgroundColor: '#11100f', duration: 3.8, ease: 'none' }, 14.2);
+
+    // beat-locked: logo card lands near 18.55s
+    tl.fromTo('#outro-rule', { scaleX: 0 }, { scaleX: 1, transformOrigin: 'left', duration: .4 }, 18.55);
+    tl.fromTo('#outro-brand', { y: 28, opacity: 0 }, { y: 0, opacity: 1, duration: .48 }, 18.61);
+    tl.fromTo('#outro-line', { y: 23, opacity: 0 }, { y: 0, opacity: 1, duration: .43 }, 18.78);
+    tl.fromTo('#outro-local', { y: 15, opacity: 0 }, { y: 0, opacity: 1, duration: .39 }, 19.0);
+    tl.fromTo('#folder-tree', { x: 70, opacity: 0 }, { x: 0, opacity: 1, duration: .55, ease: 'power2.out' }, 18.7);
+    tl.to('#s5 .field', { backgroundColor: '#15120e', duration: 2.3, ease: 'none' }, 18.6);
+    window.__timelines['wavesort-brag'] = tl;
+  </script>
+</body>
+</html>

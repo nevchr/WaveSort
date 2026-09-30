@@ -1,0 +1,57 @@
+{
+  "name": "wavesort",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A local-first audio sample organizer for Windows.",
+  "main": "dist-electron/main.js",
+  "scripts": {
+    "dev": "concurrently -k \"pnpm dev:renderer\" \"wait-on http://localhost:5173 && electron . --dev-server\"",
+    "dev:renderer": "vite",
+    "build": "pnpm build:renderer && pnpm build:electron",
+    "build:renderer": "vite build",
+    "build:electron": "tsc -p tsconfig.electron.json",
+    "typecheck": "pnpm exec tsc -p tsconfig.json --noEmit && pnpm exec tsc -p tsconfig.electron.json --noEmit",
+    "check": "pnpm test && pnpm typecheck && pnpm build",
+    "package:portable": "pnpm build && electron-builder --win portable --x64",
+    "start": "electron .",
+    "test": "tsx --test tests/*.test.ts"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "^5.0.4",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.5.2",
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
+    "concurrently": "^9.2.1",
+    "electron": "^38.1.0",
+    "electron-builder": "^26.15.3",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2",
+    "vite": "^7.1.7",
+    "wait-on": "^8.0.4"
+  },
+  "build": {
+    "appId": "ca.nevchr.wavesort",
+    "productName": "WaveSort",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ],
+      "artifactName": "WaveSort-${version}-${arch}.${ext}"
+    }
+  }
+}

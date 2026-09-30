@@ -1,0 +1,9 @@
+packages:
+  - .
+
+allowBuilds:
+  esbuild: true
+  sharp: true
+
+minimumReleaseAgeExclude:
+  - hyperframes@0.8.79

@@ -1,0 +1,12 @@
+{
+  "name": "wavesort-brag-composition",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@ffmpeg-installer/win32-x64": "4.1.0",
+    "@ffprobe-installer/win32-x64": "^5.1.0",
+    "gsap": "3.14.2",
+    "hyperframes": "0.8.79"
+  }
+}
